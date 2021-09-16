@@ -13,7 +13,7 @@ depending on the format of bam file: the methylation profile could be in
 TAG[2][1]
 TAG[3][1]
 """
-
+import subprocess
 import numpy as np
 from scipy import linalg
 import pandas as pd
@@ -143,6 +143,9 @@ def calculate_read_level_mc_metrics_genomewide(
 
         # looped over all reads
     bamfile.close()
+
+    # bgzip
+    subprocess.run(["bgzip", output_scores])
     logging.info("Total time: {:.2f} ({})".format(time.time()-ti, input_bam))
     
     return
@@ -152,25 +155,29 @@ def create_parser():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--inputs", 
-    	required=True,
-    	nargs="+",
-    	help="sorted bam file generated from Bismark")
+        nargs="+",
+        help="sorted bam files generated from Bismark")
+    parser.add_argument("-itxt", "--inputs_txt", 
+        help="sorted bam files generated from Bismark")
+
     parser.add_argument("-o", "--outputs", 
-    	required=True,
-    	nargs="+",
-    	help="bed format")
+        nargs="+",
+        help="output files")
+    parser.add_argument("-otxt", "--outputs_txt", 
+        help="output files")
+
     parser.add_argument("-s", "--bin_size", 
-    	type=int,
-    	required=True,
-    	help="bin size")
+        type=int,
+        required=True,
+        help="bin size")
     parser.add_argument("-v", "--verbose_level", 
-    	type=int,
-    	default=1000000,
-    	help="update every (1 million) reads")
+        type=int,
+        default=1000000,
+        help="update every (1 million) reads")
     parser.add_argument("-n", "--ncores", 
-    	type=int,
-    	default=1,
-    	help="number of cores to use")
+        type=int,
+        default=1,
+        help="number of cores to use")
 
     return parser
 
@@ -189,31 +196,39 @@ def create_logger(name='log'):
 
 if __name__ == "__main__":
 
-	log = create_logger()
-	parser = create_parser()
-	args = parser.parse_args()
+    log = create_logger()
+    parser = create_parser()
+    args = parser.parse_args()
 
-	inputs = args.inputs
-	outputs = args.outputs
-	bin_size = args.bin_size
-	verbose_level = args.verbose_level
-	ncores = args.ncores
+    if isinstance(args.inputs, list) and len(args.inputs):
+        inputs = args.inputs
+    else:
+        inputs = pd.read_csv(args.inputs_txt, header=None)[0].values
 
-	logger = create_logger()
-	logging.info("Calculate mc metrics genomewide")
-	logging.info("{} inputs, bin size {}, verbose_level {}, ncores {}".format(
-				len(inputs), bin_size, verbose_level, ncores))
+    if isinstance(args.outputs, list) and len(args.outputs):
+        outputs = args.outputs
+    else:
+        outputs = pd.read_csv(args.outputs_txt, header=None)[0].values
+
+    bin_size = args.bin_size
+    verbose_level = args.verbose_level
+    ncores = args.ncores
+
+    logger = create_logger()
+    logging.info("Calculate mc metrics genomewide")
+    logging.info("{} inputs, bin size {}, verbose_level {}, ncores {}".format(
+                len(inputs), bin_size, verbose_level, ncores))
 
 
-	with Pool(min(ncores, len(inputs))) as p:
-	#     # test 1 
-	#     calculate_read_level_mc_metrics_genomewide(
-	#                         _input, _output, 
-	#                         bin_size=bin_size,
-	#                         verbose_level=verbose_level,
-	#                         )
-	    # parallel
-	    p.starmap(calculate_read_level_mc_metrics_genomewide, 
-	                  [(_input, _output, bin_size, verbose_level,) 
-	                       for _input, _output in zip(inputs, outputs)],
-	             )
+    with Pool(min(ncores, len(inputs))) as p:
+    #     # test 1 
+    #     calculate_read_level_mc_metrics_genomewide(
+    #                         _input, _output, 
+    #                         bin_size=bin_size,
+    #                         verbose_level=verbose_level,
+    #                         )
+        # parallel
+        p.starmap(calculate_read_level_mc_metrics_genomewide, 
+                      [(_input, _output, bin_size, verbose_level,) 
+                           for _input, _output in zip(inputs, outputs)],
+                 )
