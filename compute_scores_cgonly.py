@@ -29,41 +29,24 @@ def main(input_mcinfo, output_mcscores):
                            columns=['mch_string', 'mcg_string'])
 
     logging.info("Calculate mC at site level...")
-    df_mch = pd.DataFrame(df_proc['mch_string'].apply(lambda x: calc_mc(x, 'h')).tolist(),
-                         index=df_proc['mch_string'].index,
-                         columns=['ch_mc', 'ch_c'],
-                         )
     df_mcg = pd.DataFrame(df_proc['mcg_string'].apply(lambda x: calc_mc(x, 'z')).tolist(),
                          index=df_proc['mcg_string'].index,
                          columns=['cg_mc', 'cg_c'],
                          )
 
     logging.info("Calculate mC at read level...")
-    df_mch_fmr = pd.DataFrame(df_proc['mch_string'].apply(lambda x: calc_fmr(x, 'h')).tolist(),
-                         index=df_proc['mch_string'].index,
-                         columns=['ch_fully_meth_reads', 'ch_fully_unmeth_reads', 'ch_total_reads'],
-                        )
-
     df_mcg_fmr = pd.DataFrame(df_proc['mcg_string'].apply(lambda x: calc_fmr(x, 'z')).tolist(),
                          index=df_proc['mcg_string'].index,
                          columns=['cg_fully_meth_reads', 'cg_fully_unmeth_reads', 'cg_total_reads'],
                         )
 
     # logging.info("Calculate MHL...")
-    # df_mch_mhl = pd.DataFrame(df_proc['mch_string'].apply(lambda x: calc_mhl_fast(x, 'h')).tolist(),
-    #                      index=df_proc['mch_string'].index,
-    #                      columns=['ch_mhl', 'ch_umhl'],
-    #                     )
     # df_mcg_mhl = pd.DataFrame(df_proc['mcg_string'].apply(lambda x: calc_mhl_fast(x, 'z')).tolist(),
     #                      index=df_proc['mcg_string'].index,
     #                      columns=['cg_mhl', 'cg_umhl'],
     #                     )
 
     logging.info("Calculate mC concurance...")
-    df_mch_conc = pd.DataFrame(df_proc['mch_string'].apply(lambda x: calc_mcconc(x, 'h')).tolist(),
-                         index=df_proc['mch_string'].index,
-                         columns=['ch_conc'],
-                        )
     df_mcg_conc = pd.DataFrame(df_proc['mcg_string'].apply(lambda x: calc_mcconc(x, 'z')).tolist(),
                          index=df_proc['mcg_string'].index,
                          columns=['cg_conc'],
@@ -72,10 +55,10 @@ def main(input_mcinfo, output_mcscores):
     logging.info("Gather results...")
     df_res = pd.concat([ 
                        df.drop('seq', axis=1),
-                       df_mch, df_mcg, 
-                       df_mch_fmr, df_mcg_fmr, 
-                    #    df_mch_mhl, df_mcg_mhl,
-                       df_mch_conc, df_mcg_conc,
+                       df_mcg, 
+                       df_mcg_fmr, 
+                    #  df_mcg_mhl,
+                       df_mcg_conc,
                       ], axis=1)
 
     logging.info("Save results...")

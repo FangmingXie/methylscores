@@ -173,16 +173,12 @@ def calc_mhl_fast(strings, letter, verbose=False):
 
 def calc_mcconc(strings, letter):
     """Shi et al. 2021
-    mcconc: fraction of unmethylated sites present in partially methylated reads
+    mcconc: number of unmethylated sites present in partially methylated reads
     """
     letter_lower = letter.lower()
     letter_upper = letter.upper()
     
-    total_sites = 0
-    conc_sites = 0
-    for string in strings:
-        total_sites += len(string)
-        if letter_upper in string: # partially methylated
-            conc_sites += string.count(letter_lower)
+    conc_sites = np.sum([s.count(letter_lower) 
+                         for s in strings if letter_upper in s])
             
-    return conc_sites/total_sites
+    return conc_sites

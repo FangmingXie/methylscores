@@ -16,7 +16,7 @@ elif [[ -z "$4" ]]; then
 	echo "Parameter 4 is empty"
     exit 1
 elif [[ -z "$5" ]]; then
-	echo "Parameter 5 is empty; choose from single and paired"
+	echo "Parameter 5 is empty; choose from single, paired, and cgonly"
     exit 1
 elif [[ -f "$3" ]]; then
 	echo "$3 exists..."
@@ -27,8 +27,8 @@ elif [[ -f "$4" ]]; then
 fi
 
 
-if [ "$5" != "single" ] && [ "$5" != "paired" ]; then
-	echo "choose from single and paired"
+if [ "$5" != "single" ] && [ "$5" != "paired" ] && [ "$5" != "cgonly" ]; then
+	echo "choose from single, paired, and cgonly"
     exit 1
 fi
 
@@ -41,17 +41,24 @@ output_mcinfo=$3
 output_mcscores=$4
 mod=$5
 
-if [ "$mod" = "single" ]; then
-    echo "single-end mode"
+echo $mod
+if [[ "$mod" == "single" ]]; then
     echo "collecting info from $bam"
-    $mydir/get_mc_pattern_bed.sh $bam $bed ${output_mcinfo}
+    $mydir/get_mc_pattern_bed.sh $bam $bed ${output_mcinfo} "normal"
     echo "calculating scores from ${output_mcinfo}"
     $mydir/compute_scores.py -i ${output_mcinfo} -o ${output_mcscores}
-elif [ "$mod" = "paired" ]; then
-    echo "paired-end mode"
+
+elif [[ "$mod" == "cgonly" ]]; then
     echo "collecting info from $bam"
-    $mydir/get_mc_pattern_bed_pairedend.sh $bam $bed ${output_mcinfo}
+    $mydir/get_mc_pattern_bed.sh $bam $bed ${output_mcinfo} "cgonly"
+    echo "calculating scores from ${output_mcinfo}"
+    $mydir/compute_scores_cgonly.py -i ${output_mcinfo} -o ${output_mcscores} # use cgonly
+
+elif [[ "$mod" = "paired" ]]; then
+    echo "collecting info from $bam"
+    $mydir/get_mc_pattern_bed.sh $bam $bed ${output_mcinfo} "paired"
     echo "calculating scores from ${output_mcinfo}"
     $mydir/compute_scores.py -i ${output_mcinfo} -o ${output_mcscores}
+
 fi
 

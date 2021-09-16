@@ -8,6 +8,10 @@ fmr: fully methylated rate (read level)
 fumr: fully unmethylated rate (read level)
 mhl: methylation haplotype load (Gou et al 2017)
 umhl: unmethylation haplotype load (symmetric to mhl)
+
+depending on the format of bam file: the methylation profile could be in 
+TAG[2][1]
+TAG[3][1]
 """
 
 import numpy as np
@@ -46,8 +50,9 @@ def calculate_read_level_mc_metrics_genomewide(
         'cg_mc', 'cg_c',
         'ch_fully_meth_reads', 'ch_fully_unmeth_reads', 'ch_total_reads',
         'cg_fully_meth_reads', 'cg_fully_unmeth_reads', 'cg_total_reads',
-        'ch_mhl', 'ch_umhl',
-        'cg_mhl', 'cg_umhl',
+        # 'ch_mhl', 'ch_umhl',
+        # 'cg_mhl', 'cg_umhl',
+        'ch_conc', 'cg_conc',
     ]
 
     bamfile = pysam.AlignmentFile(input_bam, 'rb')
@@ -70,7 +75,8 @@ def calculate_read_level_mc_metrics_genomewide(
             chrom, start, end, mc_string = (read.reference_name, 
                                             read.reference_start, 
                                             read.reference_end, 
-                                            read.tags[2][1],
+                                            # read.tags[2][1],
+                                            read.tags[3][1],
                                            )
             # handle chr
             if not chrom.startswith('chr'):
@@ -92,6 +98,9 @@ def calculate_read_level_mc_metrics_genomewide(
                     # MHL level
                     ch_mhl, ch_umhl = compute_scores_utils.calc_mhl_fast(mch_str, 'h')
                     cg_mhl, cg_umhl = compute_scores_utils.calc_mhl_fast(mcg_str, 'z')
+                    # conc
+                    ch_conc = compute_scores_utils.calc_mcconc(mch_str, 'h')
+                    cg_conc = compute_scores_utils.calc_mcconc(mcg_str, 'z')
 
                     # record values
                     column_values = [
@@ -100,8 +109,10 @@ def calculate_read_level_mc_metrics_genomewide(
                         cg_mc, cg_c,
                         ch_fmr, ch_fumr, ch_total_reads,
                         cg_fmr, cg_fumr, cg_total_reads,
-                        ch_mhl, ch_umhl,
-                        cg_mhl, cg_umhl,
+                        # ch_mhl, ch_umhl,
+                        # cg_mhl, cg_umhl,
+                        ch_conc, cg_conc,
+
                     ]
                     # output 
                     output_fh.write("\t".join([str(item) for item in column_values])+'\n')

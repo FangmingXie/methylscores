@@ -86,6 +86,10 @@ elif [ "$outputFormat" == "short" ]; then
 				if (lend>end-$4+1) {lend=end-$4+1};
 				preout=substr($15, lstart+1, lend-lstart);
 				gsub(/\./, "", preout);
+				gsub(/h/, "", preout);
+				gsub(/H/, "", preout);
+				gsub(/x/, "", preout);
+				gsub(/X/, "", preout);
 				printf "%s,", preout;
 			}
 			 END{printf "\n"}
